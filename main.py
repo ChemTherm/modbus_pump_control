@@ -54,13 +54,15 @@ class ModbusController:
             exit("invalud steps to volume conversion in config file")
         self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=5)
         self.bus_semaphore = Lock()
-        self.run_preset = False
 
         self.stall_occured = False
         self.last_slew = 0
         self.total_steps = 0
         self.step_overflow = 0
         self.total_volume = 0
+
+        self.run_preset = False
+        self.running = False
 
         self.__writeActions = {
             "slew": self.WriteCommand(self, 0x0078, (-5000000, +5000000), 2),
@@ -92,6 +94,7 @@ class ModbusController:
         self.__writeActions['error'].set_value(0)
         self.__writeActions['position'].set_value(0)
         self.__writeActions['makeUp'].set_value(1)
+        self.halt()
 
         self.polling_thread = Thread(target=self.polling_thread)
         # set daemon: polling thread will exit if main thread exit
@@ -196,6 +199,16 @@ class ModbusController:
                 sleep(interval[0])
             except KeyboardInterrupt:
                 return
+
+    def start(self):
+        self.running = True
+
+    def stop(self):
+        self.running = False
+        self.halt()
+
+    def halt(self):
+        self.set_slew(0)
 
     def polling_thread(self):
 
