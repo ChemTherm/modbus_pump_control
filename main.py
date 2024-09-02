@@ -16,6 +16,7 @@ https://pymodbustcp.readthedocs.io/en/stable/examples/client_thread.html
 https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 @ TODO: 🔲 ✅
 
+🔲 potential need to rework threading to work with pyQT it works but currently the modbus is blocking
 🔲 Timeouts is very long also doesnt crop up when setting up the device when unplugged
 🔲 Error 0x0021 2 Variable holds the error code of the last error. 
  must be read or set to 0 to clear.
@@ -51,8 +52,8 @@ class ModbusController:
         self.__cfg = self.__get_cfg()
         self.__steps_per_liter = self.__cfg.get("steps_per_liter", 0)
         if not self.__steps_per_liter:
-            exit("invalud steps to volume conversion in config file")
-        self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=5)
+            exit("invalid steps to volume conversion in config file")
+        self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=0.2)
         self.bus_semaphore = Lock()
 
         self.stall_occured = False

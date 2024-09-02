@@ -9,9 +9,29 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from main import ModbusController
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        # super().__init__()
+        self.thread = QtCore.QThread()
+        self.modbus = ModbusController(run_preset=False)
+        self.running = False
+
+    def toggleStartStop(self):
+        print("startStopp")
+        _translate = QtCore.QCoreApplication.translate
+        if self.running:
+            self.modbus.stop()
+            self.startStopButton.setText(_translate("MainWindow", "Start"))
+        else:
+            self.modbus.start()
+            self.startStopButton.setText(_translate("MainWindow", "Stop"))
+        self.running = not self.running
+
+
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1294, 800)
@@ -25,6 +45,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.startStopButton.setFont(font)
         self.startStopButton.setObjectName("startStopButton")
+        self.startStopButton.clicked.connect(self.toggleStartStop)
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(20, 20, 1251, 451))
         self.groupBox.setObjectName("groupBox")
