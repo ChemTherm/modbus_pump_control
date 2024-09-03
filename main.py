@@ -6,7 +6,7 @@ from threading import Thread, Lock
 from pyModbusTCP.client import ModbusClient
 from time import sleep
 import json
-
+from datetime import datetime as dt, timedelta
 
 SERVER_HOST = '192.168.59.35'
 SERVER_PORT = 502
@@ -53,6 +53,11 @@ class ModbusController:
         self.__steps_per_liter = self.__cfg.get("steps_per_liter", 0)
         if not self.__steps_per_liter:
             exit("invalid steps to volume conversion in config file")
+        self.__intervals = self.__cfg.get("timeRevIntervals", 0)
+        if not self.__intervals:
+            exit("invalid interval configuration in config file")
+        self.__preset_time = timedelta(seconds=sum(sublist[0] for sublist in self.__intervals))
+
         self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=0.2)
         self.bus_semaphore = Lock()
 
@@ -61,6 +66,8 @@ class ModbusController:
         self.total_steps = 0
         self.step_overflow = 0
         self.total_volume = 0
+        self.elapsed_time = timedelta()  # elapsed time till the most recent stop
+        self.start_time = dt.now()  # not technically the start time if start and stops are handled
 
         self.run_preset = False
         self.running = False
@@ -202,11 +209,19 @@ class ModbusController:
                 return
 
     def start(self):
+        self.start_time = dt.now()
         self.running = True
 
     def stop(self):
+        self.elapsed_time = self.get_elapsed_time()
         self.running = False
         self.halt()
+
+    def get_elapsed_time(self):
+        if self.running:
+            return self.elapsed_time + (dt.now() - self.start_time)
+        else:
+            return self.elapsed_time
 
     def halt(self):
         self.set_slew(0)
@@ -214,6 +229,12 @@ class ModbusController:
     def polling_thread(self):
 
         while True:
+            if not self.running:
+                continue
+
+            if self.get_elapsed_time() >= self.__preset_time:
+                self.stop()
+
             # stalled flag doesnt change
             stalled = False
 
@@ -248,7 +269,7 @@ class ModbusController:
                 if output_fault:
                     print(f"outputFault: {output_fault}")
 
-            time.sleep(1.5)
+            time.sleep(0.1)
 
 
 def main():
