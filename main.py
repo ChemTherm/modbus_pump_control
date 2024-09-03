@@ -53,10 +53,11 @@ class ModbusController:
         self.__steps_per_liter = self.__cfg.get("steps_per_liter", 0)
         if not self.__steps_per_liter:
             exit("invalid steps to volume conversion in config file")
-        self.__intervals = self.__cfg.get("timeRevIntervals", 0)
-        if not self.__intervals:
+        # @todo: consider splitting this with zip? command?
+        self.__preset_intervals = self.__cfg.get("timeRevIntervals", 0)
+        if not self.__preset_intervals:
             exit("invalid interval configuration in config file")
-        self.__preset_time = timedelta(seconds=sum(sublist[0] for sublist in self.__intervals))
+        self.__preset_time_total = timedelta(seconds=sum(sublist[0] for sublist in self.__preset_intervals))
 
         self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=0.2)
         self.bus_semaphore = Lock()
@@ -67,10 +68,11 @@ class ModbusController:
         self.step_overflow = 0
         self.total_volume = 0
         self.elapsed_time = timedelta()  # elapsed time till the most recent stop
-        self.start_time = dt.now()  # not technically the start time if start and stops are handled
+        self.__start_time = dt.now()  # not technically the start time if start and stops are handled
+        self.__preset_stage = -1
 
-        self.run_preset = False
-        self.running = False
+        self.do_run_preset = False
+        self.__running = False
 
         self.__writeActions = {
             "slew": self.WriteCommand(self, 0x0078, (-5000000, +5000000), 2),
@@ -109,7 +111,7 @@ class ModbusController:
         self.polling_thread.daemon = True
         self.polling_thread.start()
 
-        if run_preset:
+        if self.do_run_preset:
             self.__run_preset()
 
     def convert_value_to_register(self, value, value_range, register_count):
@@ -196,6 +198,7 @@ class ModbusController:
             print(f"Config error:\n{err} \ncannot open config")
         exit()
 
+    # might be deprecated if run purely via UI
     def __run_preset(self):
         # wild guess we are working with non programmers or matlab "people" (such an evil word)
         start_index = self.__cfg.get("startAt", 1) - 1
@@ -208,18 +211,32 @@ class ModbusController:
             except KeyboardInterrupt:
                 return
 
+    # @todo rework this crap... it's may work but its a bludgeon, and a headache in the coming
+    def __update_preset_stage(self):
+        if (self.__preset_stage < 0 or
+            self.get_elapsed_time() >
+            timedelta(seconds=sum(interval[0] for interval in self.__preset_intervals[:self.__preset_stage + 1]))
+        ):
+            self.__preset_stage += 1
+            print(f"preset stage is {self.__preset_stage}")
+            if len(self.__preset_intervals) <= self.__preset_stage:
+                return
+            # random 1 ... not gud
+            self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+
     def start(self):
-        self.start_time = dt.now()
-        self.running = True
+        self.__start_time = dt.now()
+        self.__running = True
+        self.set_slew_revs_minute(20)
 
     def stop(self):
         self.elapsed_time = self.get_elapsed_time()
-        self.running = False
+        self.__running = False
         self.halt()
 
     def get_elapsed_time(self):
-        if self.running:
-            return self.elapsed_time + (dt.now() - self.start_time)
+        if self.__running:
+            return self.elapsed_time + (dt.now() - self.__start_time)
         else:
             return self.elapsed_time
 
@@ -229,11 +246,14 @@ class ModbusController:
     def polling_thread(self):
 
         while True:
-            if not self.running:
+            if not self.__running:
                 continue
 
-            if self.get_elapsed_time() >= self.__preset_time:
+            # could also be moved to __update_preset_stage()
+            if self.get_elapsed_time() >= self.__preset_time_total:
                 self.stop()
+
+            self.__update_preset_stage()
 
             # stalled flag doesnt change
             stalled = False
