@@ -12,15 +12,34 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from main import ModbusController
 
 
+class WorkerThread(QtCore.QThread):
+    progress_updated = QtCore.pyqtSignal(int)
+
+    def __init__(self, modbus, parent=None):
+        super().__init__(parent)
+        self.modbus = modbus
+
+    def run(self):
+        while True:
+            self.progress_updated.emit(self.modbus.get_progress_percentage())
+            # self.progress_updated.emit(50)
+            # self.progress_updated.emit(50)
+            self.msleep(500)
+
+
 class Ui_MainWindow(object):
     def __init__(self):
-        # super().__init__()
-        self.thread = QtCore.QThread()
+        super().__init__()
+        # self.thread = QtCore.QThread()
         self.modbus = ModbusController(run_preset=False)
+        # print(self.modbus.get_progress_percentage())
+        self.thread = WorkerThread(self.modbus)
+        self.thread.progress_updated.connect(self.update_timers_ui)
+        self.thread.start()
         self.running = False
 
-    def toggleStartStop(self):
-        print("startStopp")
+
+    def toggle_start_stop(self):
         _translate = QtCore.QCoreApplication.translate
         if self.running:
             self.modbus.stop()
@@ -30,6 +49,8 @@ class Ui_MainWindow(object):
             self.startStopButton.setText(_translate("MainWindow", "Stop"))
         self.running = not self.running
 
+    def update_timers_ui(self, value):
+        self.progressBar.setValue(value)
 
 
     def setupUi(self, MainWindow):
@@ -45,7 +66,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.startStopButton.setFont(font)
         self.startStopButton.setObjectName("startStopButton")
-        self.startStopButton.clicked.connect(self.toggleStartStop)
+        self.startStopButton.clicked.connect(self.toggle_start_stop)
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(20, 20, 1251, 451))
         self.groupBox.setObjectName("groupBox")

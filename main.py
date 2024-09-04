@@ -240,6 +240,10 @@ class ModbusController:
         else:
             return self.elapsed_time
 
+    def get_progress_percentage(self):
+        # print(f"progressBar is {int((self.get_elapsed_time()/self.__preset_time_total) * 100)}")
+        return int((self.get_elapsed_time().seconds/self.__preset_time_total.seconds) * 100)
+
     def halt(self):
         self.set_slew(0)
 
@@ -248,6 +252,9 @@ class ModbusController:
         while True:
             if not self.__running:
                 continue
+
+            # print(self.get_elapsed_time())
+            # print(self.get_progress_percentage())
 
             # could also be moved to __update_preset_stage()
             if self.get_elapsed_time() >= self.__preset_time_total:
