@@ -104,6 +104,7 @@ class ModbusController:
         self.__writeActions['error'].set_value(0)
         self.__writeActions['position'].set_value(0)
         self.__writeActions['makeUp'].set_value(1)
+        self.set_run_current(100)
         self.halt()
 
         self.polling_thread = Thread(target=self.polling_thread)
@@ -306,7 +307,6 @@ def main():
 
     if not run_preset:
         try:
-            modbus_controller.set_run_current(100)
             modbus_controller.set_slew_revs_minute(20)
             sleep(20)
         except KeyboardInterrupt:
