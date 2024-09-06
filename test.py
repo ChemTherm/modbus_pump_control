@@ -25,15 +25,19 @@ import random
 
 
 class PlotCanvas(FigureCanvas):
-    def __init__(self, parent=None):
+    def __init__(self, parent, modbus):
         self.fig = Figure()
         self.ax = self.fig.add_subplot(111)
         super().__init__(self.fig)
+        self.modbus = modbus
         self.setParent(parent)
         self.plot()
 
     def plot(self):
-        data = [random.random() for i in range(10)]
+        data = self.modbus.pop_flowrate_data()
+        print(data)
+        if not data:
+            return
         self.ax.clear()  # Clear the previous plot
         self.ax.plot(data, 'r-')
         self.ax.set_title('Random Plot')
@@ -85,7 +89,6 @@ class Ui_MainWindow(object):
     def update_timers_ui(self, value):
         self.progressBar.setValue(value)
 
-
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1294, 800)
@@ -118,7 +121,7 @@ class Ui_MainWindow(object):
         self.GraphCanvas.setObjectName("GraphCanvas")
 
         self.canvas_layout = QtWidgets.QVBoxLayout(self.GraphCanvas)
-        self.plot_canvas = PlotCanvas(self.GraphCanvas)
+        self.plot_canvas = PlotCanvas(self.GraphCanvas, self.modbus)
         self.canvas_layout.addWidget(self.plot_canvas)
 
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)

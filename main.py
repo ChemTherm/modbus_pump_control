@@ -70,6 +70,7 @@ class ModbusController:
         self.elapsed_time = timedelta()  # elapsed time till the most recent stop
         self.__start_time = dt.now()  # not technically the start time if start and stops are handled
         self.__preset_stage = -1
+        self.__flow_data = []
 
         self.do_run_preset = False
         self.__running = False
@@ -245,6 +246,11 @@ class ModbusController:
         # print(f"progressBar is {int((self.get_elapsed_time()/self.__preset_time_total) * 100)}")
         return int((self.get_elapsed_time().seconds/self.__preset_time_total.seconds) * 100)
 
+    def pop_flowrate_data(self):
+        data = self.__flow_data
+        self.__flow_data = []
+        return data
+
     def halt(self):
         self.set_slew(0)
 
@@ -288,6 +294,8 @@ class ModbusController:
             velocity = self.__readAction['velocity'].get_regs()
             print(f"velocity: {velocity} steps/s")
             print(f"flowrate: {60 * velocity / self.__steps_per_liter} L/min")
+
+            self.__flow_data.append([self.get_elapsed_time().seconds, self.total_volume])
 
             err = self.__readAction['error'].get_regs()
             if err:
