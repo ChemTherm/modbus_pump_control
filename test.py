@@ -86,6 +86,15 @@ class Ui_MainWindow(object):
             # could possibly self.timer.start(500)  # Restart the timer when starting
         self.running = not self.running
 
+    def do_exit(self):
+        print()
+
+    def set_ip(self):
+        print()
+
+    def set_run_current(self):
+        self.modbus.set_run_current(0)
+
     def update_timers_ui(self, value):
         self.progressBar.setValue(value)
 
@@ -102,7 +111,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.startStopButton.setFont(font)
         self.startStopButton.setObjectName("startStopButton")
-        self.startStopButton.clicked.connect(self.toggle_start_stop)
+
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(20, 20, 1251, 451))
         self.groupBox.setObjectName("groupBox")
@@ -186,6 +195,13 @@ class Ui_MainWindow(object):
         self.stageDropdown = QtWidgets.QComboBox(self.centralwidget)
         self.stageDropdown.setGeometry(QtCore.QRect(820, 520, 71, 21))
         self.stageDropdown.setObjectName("stageDropdown")
+
+        # this part is not from PyUic output
+        self.startStopButton.clicked.connect(self.toggle_start_stop)
+        self.setRunCurrentButton.clicked.connect(self.set_run_current())
+        self.setIP.clicked.connect(self.set_ip())
+        self.exitBtn.clicked.connect(self.do_exit())
+        # self.stageDropdown.
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
