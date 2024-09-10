@@ -18,6 +18,7 @@ pyuic5 –x "filename".ui –o "filename".py
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 from main import ModbusController
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -46,6 +47,7 @@ class PlotCanvas(FigureCanvas):
 
 class WorkerThread(QtCore.QThread):
     progress_updated = QtCore.pyqtSignal(int)
+    position_updated = QtCore.pyqtSignal(int)
 
     def __init__(self, modbus, parent=None):
         super().__init__(parent)
@@ -54,9 +56,10 @@ class WorkerThread(QtCore.QThread):
     def run(self):
         while True:
             self.progress_updated.emit(self.modbus.get_progress_percentage())
+            self.position_updated.emit(self.modbus.total_steps)
             # self.progress_updated.emit(50)
             # self.progress_updated.emit(50)
-            self.msleep(500)
+            self.msleep(50)
 
 
 class Ui_MainWindow(object):
@@ -67,6 +70,7 @@ class Ui_MainWindow(object):
         # print(self.modbus.get_progress_percentage())
         self.thread = WorkerThread(self.modbus)
         self.thread.progress_updated.connect(self.update_timers_ui)
+        self.thread.position_updated.connect(self.update_position)
         self.thread.start()
         self.running = False
 
@@ -93,10 +97,25 @@ class Ui_MainWindow(object):
         print()
 
     def set_run_current(self):
-        self.modbus.set_run_current(0)
+        txt = self.runcurrentLine.text()
+        if not txt:
+            return
+        print(f"setting run current to {txt}")
+        self.modbus.set_run_current(int(txt))
+
+    def correct_run_current(self):
+        txt = self.runcurrentLine.text()
+        if not txt:
+            return
+        value = int(txt)
+        self.runcurrentLine.setText(str(max(min(100, value), 0)))
 
     def update_timers_ui(self, value):
         self.progressBar.setValue(value)
+
+    def update_position(self, value):
+        print(f"updating position {value}")
+        self.positionDisplay.setText(str(value))
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -198,9 +217,13 @@ class Ui_MainWindow(object):
 
         # this part is not from PyUic output
         self.startStopButton.clicked.connect(self.toggle_start_stop)
-        self.setRunCurrentButton.clicked.connect(self.set_run_current())
-        self.setIP.clicked.connect(self.set_ip())
-        self.exitBtn.clicked.connect(self.do_exit())
+        self.setRunCurrentButton.clicked.connect(self.set_run_current)
+        self.setIP.clicked.connect(self.set_ip)
+        self.exitBtn.clicked.connect(self.do_exit)
+        # the validator only limit the amount of digits, doing 0, 100 limits to 3 digits only
+        self.runcurrentLine.setValidator(QtGui.QIntValidator(0, 999))
+        self.runcurrentLine.editingFinished.connect(self.correct_run_current)
+        self.setRunCurrentButton.clicked.connect(self.set_run_current)
         # self.stageDropdown.
 
         self.retranslateUi(MainWindow)
