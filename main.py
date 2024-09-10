@@ -8,7 +8,6 @@ from time import sleep
 import json
 from datetime import datetime as dt, timedelta
 
-SERVER_HOST = '192.168.59.35'
 SERVER_PORT = 502
 
 '''
@@ -48,7 +47,7 @@ class ModbusController:
     # default of 256, see command 0x0048
     steps_per_rev = 51200
 
-    def __init__(self, run_preset=False):
+    def __init__(self, ip_address, run_preset=False):
         self.__cfg = self.__get_cfg()
         self.__steps_per_liter = self.__cfg.get("steps_per_liter", 0)
         if not self.__steps_per_liter:
@@ -59,7 +58,7 @@ class ModbusController:
             exit("invalid interval configuration in config file")
         self.__preset_time_total = timedelta(seconds=sum(sublist[0] for sublist in self.__preset_intervals))
 
-        self.client = ModbusClient(host=SERVER_HOST, port=SERVER_PORT, auto_open=True, timeout=0.2)
+        self.client = ModbusClient(host=ip_address, port=SERVER_PORT, auto_open=True, timeout=0.2)
         self.bus_semaphore = Lock()
 
         self.stall_occured = False
@@ -179,7 +178,7 @@ class ModbusController:
             return False
 
     def set_run_current(self, value):
-        self.__writeActions["runCurrent"].set_value(100)
+        self.__writeActions["runCurrent"].set_value(value)
 
     def set_slew(self, value):
         self.__writeActions["slew"].set_value(value)
@@ -310,7 +309,7 @@ class ModbusController:
 
 def main():
     run_preset = False
-    modbus_controller = ModbusController(run_preset)
+    modbus_controller = ModbusController('192.168.59.35', run_preset)
     # modbus_controller.__readAction["error"].get_regs()
 
     if not run_preset:

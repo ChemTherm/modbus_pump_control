@@ -36,7 +36,7 @@ class PlotCanvas(FigureCanvas):
 
     def plot(self):
         data = self.modbus.pop_flowrate_data()
-        print(data)
+        # print(data)
         if not data:
             return
         self.ax.clear()  # Clear the previous plot
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
     def __init__(self):
         super().__init__()
         # self.thread = QtCore.QThread()
-        self.modbus = ModbusController(run_preset=False)
+        self.modbus = ModbusController('192.168.59.35')
         # print(self.modbus.get_progress_percentage())
         self.thread = WorkerThread(self.modbus)
         self.thread.progress_updated.connect(self.update_timers_ui)
@@ -91,10 +91,12 @@ class Ui_MainWindow(object):
         self.running = not self.running
 
     def do_exit(self):
-        print()
+        self.modbus.stop()
+        exit()
 
     def set_ip(self):
-        print()
+        ip = '192.168.59.35'
+        self.modbus = ModbusController(ip)
 
     def set_run_current(self):
         txt = self.runcurrentLine.text()
@@ -114,7 +116,6 @@ class Ui_MainWindow(object):
         self.progressBar.setValue(value)
 
     def update_position(self, value):
-        print(f"updating position {value}")
         self.positionDisplay.setText(str(value))
 
     def setupUi(self, MainWindow):
@@ -215,19 +216,18 @@ class Ui_MainWindow(object):
         self.stageDropdown.setGeometry(QtCore.QRect(820, 520, 71, 21))
         self.stageDropdown.setObjectName("stageDropdown")
 
-        # this part is not from PyUic output
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def link_ui_to_functions(self):
+        self.ipBlock_1.validator()
         self.startStopButton.clicked.connect(self.toggle_start_stop)
         self.setRunCurrentButton.clicked.connect(self.set_run_current)
         self.setIP.clicked.connect(self.set_ip)
         self.exitBtn.clicked.connect(self.do_exit)
-        # the validator only limit the amount of digits, doing 0, 100 limits to 3 digits only
         self.runcurrentLine.setValidator(QtGui.QIntValidator(0, 999))
         self.runcurrentLine.editingFinished.connect(self.correct_run_current)
-        self.setRunCurrentButton.clicked.connect(self.set_run_current)
         # self.stageDropdown.
-
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -255,5 +255,6 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
+    ui.link_ui_to_functions()
     MainWindow.show()
     sys.exit(app.exec_())
