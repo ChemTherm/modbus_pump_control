@@ -294,7 +294,7 @@ class ModbusController:
             print(f"velocity: {velocity} steps/s")
             print(f"flowrate: {60 * velocity / self.__steps_per_liter} L/min")
 
-            self.__flow_data.append([self.get_elapsed_time().seconds, self.total_volume])
+            self.__flow_data.append([self.get_elapsed_time().total_seconds(), self.total_volume])
 
             err = self.__readAction['error'].get_regs()
             if err:

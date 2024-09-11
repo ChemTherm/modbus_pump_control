@@ -36,11 +36,11 @@ class PlotCanvas(FigureCanvas):
 
     def plot(self):
         data = self.modbus.pop_flowrate_data()
-        # print(data)
         if not data:
             return
-        self.ax.clear()  # Clear the previous plot
-        self.ax.plot(data, 'r-')
+        x_values, y_values = zip(*data)
+        # self.ax.clear()  # Clear the previous plot
+        self.ax.plot(x_values, y_values, 'b')
         self.ax.set_title('Random Plot')
         self.draw()
 
