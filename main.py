@@ -253,6 +253,13 @@ class ModbusController:
     def halt(self):
         self.set_slew(0)
 
+    def get_preset_list(self):
+        return self.__preset_intervals
+
+    def override_stage(self, index):
+        self.__preset_stage = index
+        self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+
     def polling_thread(self):
 
         while True:

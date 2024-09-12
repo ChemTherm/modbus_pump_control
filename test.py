@@ -96,6 +96,7 @@ class Ui_MainWindow(object):
 
     def set_ip(self):
         ip = '192.168.59.35'
+        QtWidgets.QMessageBox.critical(None, "Error", "invalid IP entered", QtWidgets.QMessageBox.Ok)
         self.modbus = ModbusController(ip)
 
     def set_run_current(self):
@@ -117,6 +118,14 @@ class Ui_MainWindow(object):
 
     def update_position(self, value):
         self.positionDisplay.setText(str(value))
+
+    def populate_dropdown(self):
+        presets = self.modbus.get_preset_list()
+        for entry in presets:
+            self.stageDropdown.addItem(f"{entry[1]} l/min")
+
+    def stage_selected(self, index):
+        self.modbus.override_stage(index)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -227,7 +236,8 @@ class Ui_MainWindow(object):
         self.exitBtn.clicked.connect(self.do_exit)
         self.runcurrentLine.setValidator(QtGui.QIntValidator(0, 999))
         self.runcurrentLine.editingFinished.connect(self.correct_run_current)
-        # self.stageDropdown.
+        self.populate_dropdown()
+        self.stageDropdown.activated.connect(self.stage_selected)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -237,6 +247,7 @@ class Ui_MainWindow(object):
         self.ProgressLabel.setText(_translate("MainWindow", "ProgressLabel"))
         self.exitBtn.setText(_translate("MainWindow", "Exit"))
         self.setRunCurrentButton.setText(_translate("MainWindow", "Set runcurrent"))
+        self.runcurrentLine.setText(_translate("MainWindow", "100"))
         self.ipBlock_1.setText(_translate("MainWindow", "192"))
         self.ipBlock_2.setText(_translate("MainWindow", "168"))
         self.ipBlock_3.setText(_translate("MainWindow", "59"))
