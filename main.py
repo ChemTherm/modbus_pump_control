@@ -31,6 +31,7 @@ https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 ✅ enable makeup mode Make up 0x00A0 to 1
 
 🔲 add exception throw when invalid modbus IP is given
+🔲 faster startup
 
 Pyqt mit startbutton/stopp für runpreset
 mit parameter anzeigen

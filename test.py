@@ -11,8 +11,8 @@
 pyuic5 –x "filename".ui –o "filename".py
 🔲 Termination of modbus needs to be handled
 🔲 KeyboardInterrupt on startup/in general
-
-
+🔲 scaling UI?
+🔲 style! alternativen mit links
 
 '''
 
@@ -22,7 +22,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from main import ModbusController
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import random
 
 
 class PlotCanvas(FigureCanvas):
