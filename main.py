@@ -71,6 +71,7 @@ class ModbusController:
         self.total_volume = 0
         self.elapsed_time = timedelta()  # elapsed time till the most recent stop
         self.__start_time = dt.now()  # not technically the start time if start and stops are handled
+        self.__stage_time = dt.now()
         self.__preset_stage = -1
         self.__flow_data = []
 
@@ -217,15 +218,16 @@ class ModbusController:
 
     # @todo rework this crap... it's may work but its a bludgeon, and a headache in the coming
     def __update_preset_stage(self):
+
         if (self.__preset_stage < 0 or
-            self.get_elapsed_time() >
-            timedelta(seconds=sum(interval[0] for interval in self.__preset_intervals[:self.__preset_stage + 1]))
+            dt.now() - self.__stage_time > timedelta(seconds=self.__preset_intervals[self.__preset_stage][0])
         ):
             self.__preset_stage += 1
+            self.__stage_time = dt.now()
             print(f"preset stage is {self.__preset_stage}")
             if len(self.__preset_intervals) <= self.__preset_stage:
+                self.stop()
                 return
-            # random 1 ... not gud
             self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
     def is_running(self):
@@ -276,8 +278,6 @@ class ModbusController:
             # print(self.get_progress_percentage())
 
             # could also be moved to __update_preset_stage()
-            if self.get_elapsed_time() >= self.__preset_time_total:
-                self.stop()
 
             self.__update_preset_stage()
 

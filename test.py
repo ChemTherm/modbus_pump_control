@@ -13,6 +13,8 @@ pyuic5 –x "filename".ui –o "filename".py
 🔲 KeyboardInterrupt on startup/in general
 🔲 scaling UI?
 🔲 style! alternativen mit links
+🔲 stageupdate updates the dropdown
+🔲 reset after program has finished via start
 
 '''
 
