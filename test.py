@@ -95,8 +95,12 @@ class Ui_MainWindow(object):
         exit()
 
     def set_ip(self):
-        ip = '192.168.59.35'
-        QtWidgets.QMessageBox.critical(None, "Error", "invalid IP entered", QtWidgets.QMessageBox.Ok)
+        if self.modbus.is_running():
+            QtWidgets.QMessageBox.critical(None, "Error", "cannot change IP while motor is active", QtWidgets.QMessageBox.Ok)
+            return
+        ip = (f"{self.ipBlock_1.text()}.{self.ipBlock_2.text()}."
+              f"{self.ipBlock_3.text()}.{self.ipBlock_4.text()}")
+        #
         self.modbus = ModbusController(ip)
 
     def set_run_current(self):
@@ -238,6 +242,10 @@ class Ui_MainWindow(object):
         self.runcurrentLine.editingFinished.connect(self.correct_run_current)
         self.populate_dropdown()
         self.stageDropdown.activated.connect(self.stage_selected)
+        self.ipBlock_1.setValidator(QtGui.QIntValidator(0, 255))
+        self.ipBlock_2.setValidator(QtGui.QIntValidator(0, 255))
+        self.ipBlock_3.setValidator(QtGui.QIntValidator(0, 255))
+        self.ipBlock_4.setValidator(QtGui.QIntValidator(0, 255))
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

@@ -30,6 +30,8 @@ https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 ✅ volumenstrom berechnen
 ✅ enable makeup mode Make up 0x00A0 to 1
 
+🔲 add exception throw when invalid modbus IP is given
+
 Pyqt mit startbutton/stopp für runpreset
 mit parameter anzeigen
 restdauer
@@ -224,6 +226,9 @@ class ModbusController:
                 return
             # random 1 ... not gud
             self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+
+    def is_running(self):
+        return self.__running
 
     def start(self):
         self.__start_time = dt.now()
