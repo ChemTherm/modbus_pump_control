@@ -106,10 +106,7 @@ class ModbusController:
         self.set_run_current(100)
         self.halt()
 
-        self.polling_thread = Thread(target=self.polling_thread)
-        # set daemon: polling thread will exit if main thread exit
-        self.polling_thread.daemon = True
-        self.polling_thread.start()
+        self.polling_thread = None
 
         if self.do_run_preset:
             self.__run_preset()
@@ -230,9 +227,16 @@ class ModbusController:
         return self.__running
 
     def start(self):
+        if self.polling_thread is None:
+            self.polling_thread = Thread(target=self.polling_fnc)
+            # set daemon: polling thread will exit if main thread exit
+            self.polling_thread.daemon = True
+            self.polling_thread.start()
+
         self.__start_time = dt.now()
         self.__running = True
-        self.set_slew_revs_minute(20)
+        self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+        # self.set_slew_revs_minute(20)
 
     def stop(self):
         self.elapsed_time = self.get_elapsed_time()
@@ -264,7 +268,7 @@ class ModbusController:
         self.__preset_stage = index
         self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
-    def polling_thread(self):
+    def polling_fnc(self):
 
         while True:
             if not self.__running:
