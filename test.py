@@ -49,6 +49,7 @@ class PlotCanvas(FigureCanvas):
 class WorkerThread(QtCore.QThread):
     progress_updated = QtCore.pyqtSignal(int)
     position_updated = QtCore.pyqtSignal(int)
+    stage_updated = QtCore.pyqtSignal(int)
 
     def __init__(self, modbus, parent=None):
         super().__init__(parent)
@@ -58,6 +59,7 @@ class WorkerThread(QtCore.QThread):
         while True:
             self.progress_updated.emit(self.modbus.get_progress_percentage())
             self.position_updated.emit(self.modbus.total_steps)
+            self.stage_updated.emit(self.modbus.stage_updated)
             # self.progress_updated.emit(50)
             # self.progress_updated.emit(50)
             self.msleep(50)
@@ -72,6 +74,7 @@ class Ui_MainWindow(object):
         self.thread = WorkerThread(self.modbus)
         self.thread.progress_updated.connect(self.update_timers_ui)
         self.thread.position_updated.connect(self.update_position)
+        self.thread.stage_updated.connect(self.update_stage_ui)
         self.thread.start()
         self.running = False
 
@@ -131,6 +134,13 @@ class Ui_MainWindow(object):
 
     def stage_selected(self, index):
         self.modbus.override_stage(index)
+
+    def update_stage_ui(self, stage):
+        if stage <= 0:
+            return
+        self.stageDropdown.setCurrentIndex(stage)
+        self.modbus.stage_updated = -1
+
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")

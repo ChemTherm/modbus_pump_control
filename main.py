@@ -33,13 +33,7 @@ https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 🔲 add exception throw when invalid modbus IP is given
 🔲 faster startup
 
-Pyqt mit startbutton/stopp für runpreset
-mit parameter anzeigen
-restdauer
-
 ist soll profil mit aktuellem zeitpunk
-
-
 '''
 
 
@@ -74,6 +68,7 @@ class ModbusController:
         self.__stage_time = dt.now()
         self.__preset_stage = -1
         self.__flow_data = []
+        self.stage_updated = -1
 
         self.do_run_preset = False
         self.__running = False
@@ -228,6 +223,7 @@ class ModbusController:
             if len(self.__preset_intervals) <= self.__preset_stage:
                 self.stop()
                 return
+            self.stage_updated = self.__preset_stage
             self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
     def is_running(self):
