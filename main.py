@@ -15,7 +15,7 @@ https://pymodbustcp.readthedocs.io/en/stable/examples/client_thread.html
 https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 @ TODO: 🔲 ✅
 
-🔲 potential need to rework threading to work with pyQT it works but currently the modbus is blocking
+✅ potential need to rework threading to work with pyQT it works but currently the modbus is blocking
 🔲 Timeouts is very long also doesnt crop up when setting up the device when unplugged
 🔲 Error 0x0021 2 Variable holds the error code of the last error. 
  must be read or set to 0 to clear.
@@ -31,7 +31,7 @@ https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 ✅ enable makeup mode Make up 0x00A0 to 1
 
 🔲 add exception throw when invalid modbus IP is given
-🔲 faster startup
+✅ faster startup
 
 ist soll profil mit aktuellem zeitpunk
 '''
@@ -44,7 +44,7 @@ class ModbusController:
     # default of 256, see command 0x0048
     steps_per_rev = 51200
 
-    def __init__(self, ip_address, run_preset=False):
+    def __init__(self, ip_address, do_run_preset=False):
         self.__cfg = self.__get_cfg()
         self.__steps_per_liter = self.__cfg.get("steps_per_liter", 0)
         if not self.__steps_per_liter:
@@ -63,14 +63,14 @@ class ModbusController:
         self.total_steps = 0
         self.step_overflow = 0
         self.total_volume = 0
-        self.elapsed_time = timedelta()  # elapsed time till the most recent stop
-        self.__start_time = dt.now()  # not technically the start time if start and stops are handled
+        self.elapsed_time = timedelta()     # elapsed time till the most recent stop
+        self.__start_time = dt.now()        # not technically the start time if start and stops are handled
         self.__stage_time = dt.now()
         self.__preset_stage = -1
         self.__flow_data = []
         self.stage_updated = -1
 
-        self.do_run_preset = False
+        self.do_run_preset = do_run_preset
         self.__running = False
 
         self.__writeActions = {
@@ -236,7 +236,6 @@ class ModbusController:
         self.__start_time = dt.now()
         self.__running = True
         self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
-        # self.set_slew_revs_minute(20)
 
     def stop(self):
         self.elapsed_time = self.get_elapsed_time()
@@ -250,7 +249,6 @@ class ModbusController:
             return self.elapsed_time
 
     def get_progress_percentage(self):
-        # print(f"progressBar is {int((self.get_elapsed_time()/self.__preset_time_total) * 100)}")
         return int((self.get_elapsed_time().seconds/self.__preset_time_total.seconds) * 100)
 
     def pop_flowrate_data(self):
@@ -273,11 +271,6 @@ class ModbusController:
         while True:
             if not self.__running:
                 continue
-
-            # print(self.get_elapsed_time())
-            # print(self.get_progress_percentage())
-
-            # could also be moved to __update_preset_stage()
 
             self.__update_preset_stage()
 
