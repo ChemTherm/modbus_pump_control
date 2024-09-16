@@ -13,8 +13,8 @@
 
 """
 pyuic5 –x "filename".ui –o "filename".py
-🔲 Termination of modbus needs to be handled
-🔲 closing the UI via X button on UI does not stop the motor
+✅ Termination of modbus needs to be handled
+✅ closing the UI via X button on UI does not stop the motor
 🔲 KeyboardInterrupt on startup/in general
 🔲 scaling UI?
 🔲 style! alternativen mit links
@@ -286,4 +286,5 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     ui.link_ui_to_functions()
     MainWindow.show()
+    app.aboutToQuit.connect(ui.modbus.stop)
     sys.exit(app.exec_())
