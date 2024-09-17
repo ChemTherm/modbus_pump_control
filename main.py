@@ -16,7 +16,6 @@ https://novantaims.com/downloads/manuals/modbus_tcp.pdf
 @ TODO: 🔲 ✅
 
 ✅ potential need to rework threading to work with pyQT it works but currently the modbus is blocking
-🔲 Timeouts is very long also doesnt crop up when setting up the device when unplugged
 🔲 Error 0x0021 2 Variable holds the error code of the last error. 
  must be read or set to 0 to clear.
  — 0
@@ -66,6 +65,7 @@ class ModbusController:
         self.elapsed_time = timedelta()     # elapsed time till the most recent stop
         self.__start_time = dt.now()        # not technically the start time if start and stops are handled
         self.__stage_time = dt.now()
+        self.__stage_elapsed = timedelta()
         self.__preset_stage = -1
         self.__flow_data = []
         self.stage_updated = -1
@@ -208,19 +208,23 @@ class ModbusController:
             except KeyboardInterrupt:
                 return
 
-    # @todo rework this crap... it's may work but its a bludgeon, and a headache in the coming
-    def __update_preset_stage(self):
+    def __update_preset_stage(self, set_slew=False):
+        if self.__preset_stage >= len(self.__preset_intervals):
+            return
 
-        if (self.__preset_stage < 0 or
-            dt.now() - self.__stage_time > timedelta(seconds=self.__preset_intervals[self.__preset_stage][0])
-        ):
+        # second line here needs to take something like
+        if self.__preset_stage < 0 or \
+                dt.now() - self.__stage_time > timedelta(seconds=self.__preset_intervals[self.__preset_stage][0]):
             self.__preset_stage += 1
             self.__stage_time = dt.now()
-            print(f"preset stage is {self.__preset_stage}")
+            self.__stage_elapsed = timedelta()
+            print(f"\n\n\npreset stage is {self.__preset_stage}")
             if len(self.__preset_intervals) <= self.__preset_stage:
                 self.stop()
                 return
             self.stage_updated = self.__preset_stage
+            set_slew = True
+        if set_slew:
             self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
     def is_running(self):
@@ -235,10 +239,11 @@ class ModbusController:
 
         self.__start_time = dt.now()
         self.__running = True
-        self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+        self.__update_preset_stage(True)
 
     def stop(self):
         self.elapsed_time = self.get_elapsed_time()
+        self.__stage_elapsed = self.__stage_elapsed + (dt.now() - self.__stage_time)
         self.__running = False
         self.halt()
 
@@ -264,6 +269,7 @@ class ModbusController:
 
     def override_stage(self, index):
         self.__preset_stage = index
+        # @Todo this needs to be integrated wit hrecent changes
         self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
     def polling_fnc(self):
@@ -274,12 +280,9 @@ class ModbusController:
 
             self.__update_preset_stage()
 
-            # stalled flag doesnt change
-            stalled = False
-
             moving = self.__readAction['moving'].get_regs()
             print(f"moving: {moving}")
-            if stalled or (not moving and self.last_slew):
+            if not moving and self.last_slew:
                 self.stall_occured = True
                 '''
                 right here an error is thrown but without consequences as much as i can tell, delays don't fix this
