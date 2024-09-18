@@ -209,12 +209,16 @@ class ModbusController:
                 return
 
     def __update_preset_stage(self, set_slew=False):
+
+        if set_slew:
+            self.__stage_time = dt.now()
+
         if self.__preset_stage >= len(self.__preset_intervals):
             return
 
         # second line here needs to take something like
         if self.__preset_stage < 0 or \
-                dt.now() - self.__stage_time > timedelta(seconds=self.__preset_intervals[self.__preset_stage][0]):
+                self.__get_stage_elapsed() > timedelta(seconds=self.__preset_intervals[self.__preset_stage][0]):
             self.__preset_stage += 1
             self.__stage_time = dt.now()
             self.__stage_elapsed = timedelta()
@@ -224,6 +228,7 @@ class ModbusController:
                 return
             self.stage_updated = self.__preset_stage
             set_slew = True
+
         if set_slew:
             self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
 
@@ -243,7 +248,7 @@ class ModbusController:
 
     def stop(self):
         self.elapsed_time = self.get_elapsed_time()
-        self.__stage_elapsed = self.__stage_elapsed + (dt.now() - self.__stage_time)
+        self.__stage_elapsed = self.__get_stage_elapsed()
         self.__running = False
         self.halt()
 
@@ -252,6 +257,9 @@ class ModbusController:
             return self.elapsed_time + (dt.now() - self.__start_time)
         else:
             return self.elapsed_time
+
+    def __get_stage_elapsed(self):
+        return self.__stage_elapsed + (dt.now() - self.__stage_time)
 
     def get_progress_percentage(self):
         return int((self.get_elapsed_time().seconds/self.__preset_time_total.seconds) * 100)
@@ -269,8 +277,8 @@ class ModbusController:
 
     def override_stage(self, index):
         self.__preset_stage = index
-        # @Todo this needs to be integrated wit hrecent changes
-        self.set_slew_revs_minute(self.__preset_intervals[self.__preset_stage][1])
+        if self.__running:
+            self.__update_preset_stage(True)
 
     def polling_fnc(self):
 
