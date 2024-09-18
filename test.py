@@ -18,8 +18,9 @@ pyuic5 –x "filename".ui –o "filename".py
 🔲 KeyboardInterrupt on startup/in general
 🔲 scaling UI?
 🔲 style! alternativen mit links
-🔲 stageupdate updates the dropdown
+✅ stageupdate updates the dropdown
 🔲 reset after program has finished via start
+19537
 
 """
 
@@ -146,28 +147,16 @@ class Ui_MainWindow(object):
         MainWindow.resize(1294, 800)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.startStopButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startStopButton.setGeometry(QtCore.QRect(920, 620, 111, 41))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setBold(True)
-        font.setWeight(75)
-        self.startStopButton.setFont(font)
-        self.startStopButton.setObjectName("startStopButton")
 
+        # Main vertical layout
+        self.main_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+
+        # GroupBox Layout for GraphCanvas
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox.setGeometry(QtCore.QRect(20, 20, 1251, 451))
         self.groupBox.setObjectName("groupBox")
-
-        '''
-        self.GraphSlider = QtWidgets.QScrollBar(self.groupBox)
-        self.GraphSlider.setGeometry(QtCore.QRect(20, 410, 1181, 20))
-        self.GraphSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.GraphSlider.setObjectName("GraphSlider")
-        '''
+        self.groupBox_layout = QtWidgets.QVBoxLayout(self.groupBox)
 
         self.GraphCanvas = QtWidgets.QFrame(self.groupBox)
-        self.GraphCanvas.setGeometry(QtCore.QRect(20, 30, 1181, 450))
         self.GraphCanvas.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.GraphCanvas.setFrameShadow(QtWidgets.QFrame.Raised)
         self.GraphCanvas.setObjectName("GraphCanvas")
@@ -176,68 +165,95 @@ class Ui_MainWindow(object):
         self.plot_canvas = PlotCanvas(self.GraphCanvas, self.modbus)
         self.canvas_layout.addWidget(self.plot_canvas)
 
-        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(QtCore.QRect(920, 520, 118, 23))
-        self.progressBar.setProperty("value", 24)
-        self.progressBar.setObjectName("progressBar")
-        self.ProgressLabel = QtWidgets.QLabel(self.centralwidget)
-        self.ProgressLabel.setGeometry(QtCore.QRect(910, 540, 111, 21))
-        self.ProgressLabel.setObjectName("Progress")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1294, 21))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        # Add GraphCanvas to the groupBox layout
+        self.groupBox_layout.addWidget(self.GraphCanvas)
 
-        self.ipBlock_1 = QtWidgets.QLineEdit(self.centralwidget)
-        self.ipBlock_1.setGeometry(QtCore.QRect(30, 570, 51, 21))
-        self.ipBlock_1.setToolTip("")
-        self.ipBlock_1.setObjectName("ipBlock_1")
-        self.ipBlock_2 = QtWidgets.QLineEdit(self.centralwidget)
-        self.ipBlock_2.setGeometry(QtCore.QRect(90, 570, 51, 21))
-        self.ipBlock_2.setToolTip("")
-        self.ipBlock_2.setObjectName("ipBlock_2")
-        self.ipBlock_3 = QtWidgets.QLineEdit(self.centralwidget)
-        self.ipBlock_3.setGeometry(QtCore.QRect(150, 570, 51, 21))
-        self.ipBlock_3.setToolTip("")
-        self.ipBlock_3.setObjectName("ipBlock_3")
-        self.ipBlock_4 = QtWidgets.QLineEdit(self.centralwidget)
-        self.ipBlock_4.setGeometry(QtCore.QRect(210, 570, 51, 21))
-        self.ipBlock_4.setToolTip("")
-        self.ipBlock_4.setObjectName("ipBlock_4")
-        self.setIP = QtWidgets.QPushButton(self.centralwidget)
-        self.setIP.setGeometry(QtCore.QRect(270, 570, 101, 23))
-        self.setIP.setObjectName("setIP")
+        # Add groupBox to main layout
+        self.main_layout.addWidget(self.groupBox)
 
-        self.positionLabel = QtWidgets.QLabel(self.centralwidget)
-        self.positionLabel.setGeometry(QtCore.QRect(1050, 530, 47, 13))
-        self.positionLabel.setObjectName("positionLabel")
-        self.positionDisplay = QtWidgets.QLabel(self.centralwidget)
-        self.positionDisplay.setGeometry(QtCore.QRect(1100, 530, 47, 13))
-        self.positionDisplay.setObjectName("positionDisplay")
+        # Add bottom controls (buttons, labels, etc.)
+        self.control_layout = QtWidgets.QHBoxLayout()
 
-        self.setRunCurrentButton = QtWidgets.QPushButton(self.centralwidget)
-        self.setRunCurrentButton.setGeometry(QtCore.QRect(270, 520, 101, 23))
-        self.setRunCurrentButton.setObjectName("setRunCurrentButton")
-        self.runcurrentLine = QtWidgets.QLineEdit(self.centralwidget)
-        self.runcurrentLine.setGeometry(QtCore.QRect(210, 520, 51, 21))
-        self.runcurrentLine.setToolTip("")
-        self.runcurrentLine.setObjectName("runcurrentLine")
-
-        self.exitBtn = QtWidgets.QPushButton(self.centralwidget)
-        self.exitBtn.setGeometry(QtCore.QRect(1040, 620, 111, 41))
+        # Start/Stop Button
+        self.startStopButton = QtWidgets.QPushButton(self.centralwidget)
         font = QtGui.QFont()
         font.setPointSize(14)
         font.setBold(True)
         font.setWeight(75)
+        self.startStopButton.setFont(font)
+        self.startStopButton.setObjectName("startStopButton")
+        self.control_layout.addWidget(self.startStopButton)
+
+        # Set IP Button and Fields
+        self.ipBlock_1 = QtWidgets.QLineEdit(self.centralwidget)
+        self.ipBlock_1.setObjectName("ipBlock_1")
+        self.control_layout.addWidget(self.ipBlock_1)
+
+        self.ipBlock_2 = QtWidgets.QLineEdit(self.centralwidget)
+        self.ipBlock_2.setObjectName("ipBlock_2")
+        self.control_layout.addWidget(self.ipBlock_2)
+
+        self.ipBlock_3 = QtWidgets.QLineEdit(self.centralwidget)
+        self.ipBlock_3.setObjectName("ipBlock_3")
+        self.control_layout.addWidget(self.ipBlock_3)
+
+        self.ipBlock_4 = QtWidgets.QLineEdit(self.centralwidget)
+        self.ipBlock_4.setObjectName("ipBlock_4")
+        self.control_layout.addWidget(self.ipBlock_4)
+
+        self.setIP = QtWidgets.QPushButton(self.centralwidget)
+        self.setIP.setObjectName("setIP")
+        self.control_layout.addWidget(self.setIP)
+
+        # Run Current Button
+        self.runcurrentLine = QtWidgets.QLineEdit(self.centralwidget)
+        self.runcurrentLine.setObjectName("runcurrentLine")
+        self.control_layout.addWidget(self.runcurrentLine)
+
+        self.setRunCurrentButton = QtWidgets.QPushButton(self.centralwidget)
+        self.setRunCurrentButton.setObjectName("setRunCurrentButton")
+        self.control_layout.addWidget(self.setRunCurrentButton)
+
+        # Progress Label
+        self.ProgressLabel = QtWidgets.QLabel(self.centralwidget)
+        self.ProgressLabel.setObjectName("ProgressLabel")
+        self.control_layout.addWidget(self.ProgressLabel)
+
+        # Progress Bar
+        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        self.progressBar.setProperty("value", 24)
+        self.progressBar.setObjectName("progressBar")
+        self.control_layout.addWidget(self.progressBar)
+
+        # Position Label and Display
+        self.positionLabel = QtWidgets.QLabel(self.centralwidget)
+        self.positionLabel.setObjectName("positionLabel")
+        self.control_layout.addWidget(self.positionLabel)
+
+        self.positionDisplay = QtWidgets.QLabel(self.centralwidget)
+        self.positionDisplay.setObjectName("positionDisplay")
+        self.control_layout.addWidget(self.positionDisplay)
+
+        # Exit Button
+        self.exitBtn = QtWidgets.QPushButton(self.centralwidget)
         self.exitBtn.setFont(font)
         self.exitBtn.setObjectName("exitBtn")
+        self.control_layout.addWidget(self.exitBtn)
+
+        # Stage Dropdown
         self.stageDropdown = QtWidgets.QComboBox(self.centralwidget)
-        self.stageDropdown.setGeometry(QtCore.QRect(820, 520, 71, 21))
         self.stageDropdown.setObjectName("stageDropdown")
+        self.control_layout.addWidget(self.stageDropdown)
+
+        # Add control layout to main layout
+        self.main_layout.addLayout(self.control_layout)
+
+        # Set central widget layout
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        # Set Size Policies to allow resizing
+        self.plot_canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.startStopButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
